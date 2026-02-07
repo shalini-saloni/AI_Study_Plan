@@ -694,6 +694,95 @@
                 if (day < total * 0.85) return 'Practice';
                 return 'Revision';
             }
+
+            generateInsights() {
+                const allocations = this.calculateSubjectAllocation();
+                const { totalHours, days } = this.calculateTotalHours();
+                
+                // Make sure we have valid data
+                if (!allocations || allocations.length === 0 || !totalHours || totalHours === 0) {
+                    return [{
+                        title: '⚠️ Unable to Generate Insights',
+                        text: 'Please ensure all required fields are filled in correctly.'
+                    }];
+                }
+                
+                const insights = [];
+
+                // Calculate total weight
+                const totalWeight = allocations.reduce((sum, a) => sum + (a.weight || 0), 0);
+                
+                // Assign percentages and hours
+                allocations.forEach(a => {
+                    a.percentage = totalWeight > 0 ? (a.weight / totalWeight) * 100 : 0;
+                    a.allocatedHours = totalWeight > 0 ? (a.weight / totalWeight) * totalHours : 0;
+                });
+
+                // Find lowest confidence subject (highest priority)
+                const lowestConfidence = allocations.reduce((min, s) => 
+                    s.confidence < min.confidence ? s : min
+                );
+                
+                // Find highest confidence subject
+                const highestConfidence = allocations.reduce((max, s) => 
+                    s.confidence > max.confidence ? s : max
+                );
+                
+                if (lowestConfidence && lowestConfidence.allocatedHours > 0) {
+                    const weakTopics = lowestConfidence.weakAreas && lowestConfidence.weakAreas.length > 0 
+                        ? lowestConfidence.weakAreas.slice(0, 2).join(' and ') 
+                        : 'fundamental concepts';
+                    
+                    insights.push({
+                        title: '🎯 Top Priority - Needs Most Time',
+                        text: `${lowestConfidence.name} gets the MOST study time (${Math.round(lowestConfidence.percentage)}% = ${Math.round(lowestConfidence.allocatedHours)} hours) due to low confidence (${lowestConfidence.confidence}/5). Focus on ${weakTopics} in Week 1 with intensive high-focus sessions.`
+                    });
+                }
+
+                // Explain the allocation strategy
+                if (allocations.length > 1) {
+                    const allocationExplanation = allocations
+                        .sort((a, b) => b.percentage - a.percentage)
+                        .map(s => `${s.name}: ${Math.round(s.percentage)}% (Confidence ${s.confidence}/5)`)
+                        .join(' • ');
+                    
+                    insights.push({
+                        title: '⚖️ Smart Time Allocation',
+                        text: `Lower confidence = MORE study time. ${allocationExplanation}. This ensures you master challenging subjects before moving to easier ones.`
+                    });
+                }
+
+                // Prerequisite and weak area strategy
+                const totalWeakAreas = allocations.reduce((sum, s) => 
+                    sum + (s.weakAreas ? s.weakAreas.length : 0), 0
+                );
+                
+                if (totalWeakAreas > 0) {
+                    insights.push({
+                        title: '🔗 Foundation-First Approach',
+                        text: `You identified ${totalWeakAreas} weak area${totalWeakAreas > 1 ? 's' : ''} across all subjects. Week 1 schedule prioritizes these gaps with longer study blocks. Strong areas get lighter revision time to avoid over-studying.`
+                    });
+                }
+
+                // Study schedule optimization
+                const preferredTime = this.data.preferredTime || 'your preferred';
+                if (lowestConfidence && highestConfidence) {
+                    insights.push({
+                        title: '⚡ Peak Performance Scheduling',
+                        text: `High-focus topics (${lowestConfidence.name}) scheduled first during ${preferredTime} hours when mental energy is highest. ${highestConfidence.name} (Confidence ${highestConfidence.confidence}/5) gets lighter review slots.`
+                    });
+                }
+
+                // Progress roadmap
+                const weeksAvailable = Math.ceil(days / 7);
+                const bufferHours = Math.round(totalHours * 0.1);
+                insights.push({
+                    title: '📈 Two-Phase Learning Strategy',
+                    text: `Week 1: Intensive learning on weak areas (${Math.round(totalHours * 0.6)} hours). Week 2: Practice, revision, and reinforcement (${Math.round(totalHours * 0.3)} hours). ${bufferHours} hours buffer for challenging topics.`
+                });
+
+                return insights;
+            }
         }
     </script>
 </body>
