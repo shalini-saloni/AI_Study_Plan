@@ -563,6 +563,103 @@
                     }
                 };
             }
+
+            createWeeklySchedule(allocations, totalDays) {
+                const schedule = [];
+                const startDate = new Date();
+                startDate.setHours(0, 0, 0, 0);
+                const daysToShow = Math.min(Math.max(totalDays, 7), 14);
+                
+                const preferredTime = this.data.preferredTime || 'Night';
+                
+                // Ensure we have valid subjects
+                const validAllocations = allocations.filter(a => a.name && a.name.trim() !== '');
+                
+                if (validAllocations.length === 0) {
+                    return schedule;
+                }
+                
+                // Sort by priority: lowest confidence first (they need most time)
+                const sortedByPriority = [...validAllocations].sort((a, b) => a.confidence - b.confidence);
+                
+                for (let day = 0; day < daysToShow; day++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(currentDate.getDate() + day);
+                    
+                    const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+                    const availableHours = isWeekend ? 
+                        (parseInt(this.data.weekendHours) || 6) : 
+                        (parseInt(this.data.weekdayHours) || 3);
+                    
+                    const daySchedule = {
+                        date: currentDate,
+                        dayName: currentDate.toLocaleDateString('en-US', { weekday: 'short' }),
+                        blocks: []
+                    };
+
+                    let remainingHours = availableHours;
+                    
+                    // In first week: Focus heavily on low-confidence subjects
+                    // In second week: More balanced review
+                    const isFirstWeek = day < 7;
+                    
+                    // Determine which subjects to study today
+                    const dayAllocation = isFirstWeek 
+                        ? [...sortedByPriority]  // First week: prioritize by confidence
+                        : [...validAllocations].sort(() => Math.random() - 0.5);  // Second week: rotate
+
+                    // Distribute hours proportionally to weight
+                    const totalWeight = dayAllocation.reduce((sum, s) => sum + s.weight, 0);
+                    
+                    for (let i = 0; i < dayAllocation.length && remainingHours > 0.5; i++) {
+                        const subject = dayAllocation[i];
+                        
+                        // Calculate this subject's share of today's hours
+                        let hoursForSubject;
+                        if (isFirstWeek) {
+                            // First week: give proportionally more to low-confidence subjects
+                            const subjectProportion = subject.weight / totalWeight;
+                            hoursForSubject = Math.min(
+                                remainingHours,
+                                availableHours * subjectProportion * 1.2  // 20% boost
+                            );
+                        } else {
+                            // Second week: more balanced
+                            hoursForSubject = Math.min(
+                                remainingHours,
+                                availableHours / dayAllocation.length
+                            );
+                        }
+                        
+                        // Ensure minimum block size
+                        if (hoursForSubject >= 0.5) {
+                            const topics = this.selectTopics(subject, day, daysToShow);
+                            const cognitiveLoad = this.calculateCognitiveLoad(subject, topics);
+                            
+                            daySchedule.blocks.push({
+                                subject: subject.name,
+                                topics,
+                                duration: Math.round(hoursForSubject * 10) / 10,  // Round to 1 decimal
+                                cognitiveLoad,
+                                type: this.getBlockType(day, daysToShow)
+                            });
+                            
+                            remainingHours -= hoursForSubject;
+                        }
+                    }
+                    
+                    // Sort blocks by cognitive load (high focus first during preferred time)
+                    daySchedule.blocks.sort((a, b) => {
+                        const loadOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+                        return loadOrder[a.cognitiveLoad] - loadOrder[b.cognitiveLoad];
+                    });
+
+                    // Always add the day to schedule
+                    schedule.push(daySchedule);
+                }
+
+                return schedule;
+            }
         }
     </script>
 </body>
