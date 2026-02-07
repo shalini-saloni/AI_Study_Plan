@@ -812,6 +812,25 @@
                 preferredTime: 'Night',
                 targetDate: ''
             });
+
+            const [planData, setPlanData] = useState(null);
+
+            const handleInputChange = (field, value) => {
+                setStudentData(prev => ({ ...prev, [field]: value }));
+            };
+
+            const handleSubjectChange = (index, field, value) => {
+                const newSubjects = [...studentData.subjects];
+                newSubjects[index][field] = value;
+                
+                if (field === 'strongAreasText') {
+                    newSubjects[index].strongAreas = value.split(',').map(s => s.trim()).filter(s => s);
+                } else if (field === 'weakAreasText') {
+                    newSubjects[index].weakAreas = value.split(',').map(s => s.trim()).filter(s => s);
+                }
+                
+                setStudentData(prev => ({ ...prev, subjects: newSubjects }));
+            };
         }
     </script>
 </body>
