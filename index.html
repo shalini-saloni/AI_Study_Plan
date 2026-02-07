@@ -784,6 +784,35 @@
                 return insights;
             }
         }
+
+        function App() {
+            const [step, setStep] = useState('form');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            
+            const [studentData, setStudentData] = useState({
+                name: '',
+                college: '',
+                branch: '',
+                year: '',
+                email: '',
+                subjects: [
+                    { 
+                        name: '', 
+                        credits: 3, 
+                        strongAreas: [], 
+                        weakAreas: [], 
+                        confidence: 3,
+                        strongAreasText: '',
+                        weakAreasText: ''
+                    }
+                ],
+                weekdayHours: 3,
+                weekendHours: 6,
+                preferredTime: 'Night',
+                targetDate: ''
+            });
+        }
     </script>
 </body>
 </html>
