@@ -853,6 +853,75 @@
                     subjects: prev.subjects.filter((_, i) => i !== index)
                 }));
             };
+
+            const generatePlan = () => {
+                setError('');
+                
+                // Validation
+                if (!studentData.name || studentData.name.trim() === '') {
+                    setError('Please enter your name');
+                    return;
+                }
+
+                if (!studentData.targetDate) {
+                    setError('Please select a target completion date');
+                    return;
+                }
+
+                // Check if target date is in the future
+                const targetDate = new Date(studentData.targetDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                targetDate.setHours(0, 0, 0, 0);
+                
+                if (targetDate <= today) {
+                    setError('Target date must be in the future');
+                    return;
+                }
+
+                // Validate subjects
+                const validSubjects = studentData.subjects.filter(s => s.name && s.name.trim() !== '');
+                if (validSubjects.length === 0) {
+                    setError('Please add at least one subject with a name');
+                    return;
+                }
+
+                // Validate study hours
+                if (studentData.weekdayHours < 1 || studentData.weekendHours < 1) {
+                    setError('Study hours must be at least 1 hour per day');
+                    return;
+                }
+
+                setLoading(true);
+                
+                setTimeout(() => {
+                    try {
+                        // Use only valid subjects
+                        const cleanedData = {
+                            ...studentData,
+                            subjects: validSubjects
+                        };
+                        
+                        const engine = new StudyPlannerEngine(cleanedData);
+                        const plan = engine.generateSchedule();
+                        
+                        // Generate insights AFTER schedule is created (so allocations have hours)
+                        const insights = engine.generateInsights();
+                        
+                        setPlanData({
+                            ...plan,
+                            insights
+                        });
+                        
+                        setLoading(false);
+                        setStep('schedule');
+                    } catch (error) {
+                        console.error('Error generating plan:', error);
+                        setError('Error generating study plan. Please check your inputs and try again.');
+                        setLoading(false);
+                    }
+                }, 1500);
+            };
         }
     </script>
 </body>
