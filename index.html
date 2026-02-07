@@ -660,6 +660,40 @@
 
                 return schedule;
             }
+
+            selectTopics(subject, dayIndex, totalDays) {
+                const phase = dayIndex < (totalDays * 0.6) ? 'learning' : 'revision';
+                
+                if (phase === 'learning') {
+                    if (subject.weakAreas && subject.weakAreas.length > 0) {
+                        // Rotate through weak areas
+                        const topicIndex = dayIndex % subject.weakAreas.length;
+                        return [subject.weakAreas[topicIndex]];
+                    } else {
+                        return ['Core Concepts'];
+                    }
+                } else {
+                    if (subject.strongAreas && subject.strongAreas.length > 0) {
+                        return ['Review: ' + subject.strongAreas[0]];
+                    } else if (subject.weakAreas && subject.weakAreas.length > 0) {
+                        return ['Practice: ' + subject.weakAreas[0]];
+                    } else {
+                        return ['General Review'];
+                    }
+                }
+            }
+
+            calculateCognitiveLoad(subject, topics) {
+                if (subject.confidence <= 2) return 'high';
+                if (subject.confidence >= 4) return 'low';
+                return 'medium';
+            }
+
+            getBlockType(day, total) {
+                if (day < total * 0.6) return 'Learning';
+                if (day < total * 0.85) return 'Practice';
+                return 'Revision';
+            }
         }
     </script>
 </body>
