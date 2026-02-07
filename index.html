@@ -831,6 +831,28 @@
                 
                 setStudentData(prev => ({ ...prev, subjects: newSubjects }));
             };
+
+            const addSubject = () => {
+                setStudentData(prev => ({
+                    ...prev,
+                    subjects: [...prev.subjects, {
+                        name: '',
+                        credits: 3,
+                        strongAreas: [],
+                        weakAreas: [],
+                        confidence: 3,
+                        strongAreasText: '',
+                        weakAreasText: ''
+                    }]
+                }));
+            };
+
+            const removeSubject = (index) => {
+                setStudentData(prev => ({
+                    ...prev,
+                    subjects: prev.subjects.filter((_, i) => i !== index)
+                }));
+            };
         }
     </script>
 </body>
