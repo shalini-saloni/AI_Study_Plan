@@ -933,6 +933,122 @@
                     </div>
                 );
             }
+
+            if (step === 'schedule' && planData) {
+                return (
+                    <div className="app-container">
+                        <div className="header">
+                            <h1 className="logo">SmartStudy AI</h1>
+                            <p className="tagline">Your Personalized Engineering Study Plan</p>
+                        </div>
+
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-value">{planData.stats.totalHours}</div>
+                                <div className="stat-label">Total Study Hours</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value">{planData.stats.days}</div>
+                                <div className="stat-label">Days to Target</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value">{planData.stats.subjects}</div>
+                                <div className="stat-label">Subjects</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value">{planData.schedule.length}</div>
+                                <div className="stat-label">Study Days Planned</div>
+                            </div>
+                        </div>
+
+                        <div className="insights-container">
+                            <h2 className="section-title">🧠 AI Insights & Recommendations</h2>
+                            {planData.insights.map((insight, i) => (
+                                <div key={i} className="insight-item">
+                                    <div className="insight-title">{insight.title}</div>
+                                    <div className="insight-text">{insight.text}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="calendar-container">
+                            <h2 className="section-title">📅 Your 2-Week Study Schedule</h2>
+                            
+                            <div className="legend">
+                                <div className="legend-item">
+                                    <div className="legend-color" style={{background: 'var(--high-load)'}}></div>
+                                    <span>High Focus</span>
+                                </div>
+                                <div className="legend-item">
+                                    <div className="legend-color" style={{background: 'var(--medium-load)'}}></div>
+                                    <span>Medium Focus</span>
+                                </div>
+                                <div className="legend-item">
+                                    <div className="legend-color" style={{background: 'var(--low-load)'}}></div>
+                                    <span>Light Review</span>
+                                </div>
+                            </div>
+
+                            <div className="week-grid">
+                                {planData.schedule.map((day, i) => (
+                                    <div key={i} className="day-column">
+                                        <div className="day-header">
+                                            {day.dayName}<br/>
+                                            {day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        </div>
+                                        {day.blocks.length === 0 ? (
+                                            <div style={{
+                                                padding: '1rem',
+                                                textAlign: 'center',
+                                                color: 'var(--text-dim)',
+                                                fontSize: '0.875rem',
+                                                fontStyle: 'italic'
+                                            }}>
+                                                Rest Day
+                                            </div>
+                                        ) : (
+                                            day.blocks.map((block, j) => (
+                                                <div key={j} className={`study-block ${block.cognitiveLoad}-load`}>
+                                                    <div className="block-subject">{block.subject}</div>
+                                                    <div className="block-topic">
+                                                        {block.type}: {Array.isArray(block.topics) ? block.topics.join(', ') : block.topics}
+                                                    </div>
+                                                    <div className="block-time">
+                                                        {block.duration.toFixed(1)}h
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="form-container">
+                            <h2 className="section-title">📊 Subject Allocation</h2>
+                            <div className="form-grid">
+                                {planData.allocations.map((subject, i) => (
+                                    <div key={i} className="subject-card">
+                                        <div className="subject-header">
+                                            <strong>{subject.name}</strong>
+                                            <span>{Math.round(subject.percentage)}%</span>
+                                        </div>
+                                        <div style={{fontSize: '0.875rem', color: 'var(--text-dim)'}}>
+                                            {Math.round(subject.allocatedHours)} hours allocated
+                                        </div>
+                                        <div style={{fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.5rem'}}>
+                                            Confidence: {subject.confidence}/5 • {subject.credits} credits
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button className="btn btn-primary" style={{marginTop: '1.5rem'}} onClick={() => setStep('form')}>
+                                ← Create New Plan
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
         }
     </script>
 </body>
