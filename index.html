@@ -537,6 +537,32 @@
                     };
                 });
             }
+
+            generateSchedule() {
+                const { totalHours, days } = this.calculateTotalHours();
+                const allocations = this.calculateSubjectAllocation();
+                
+                // Calculate the total weight first
+                const totalWeight = allocations.reduce((sum, a) => sum + a.weight, 0);
+                
+                // Then assign percentages and allocated hours
+                allocations.forEach(a => {
+                    a.percentage = (a.weight / totalWeight) * 100;
+                    a.allocatedHours = (a.weight / totalWeight) * totalHours;
+                });
+
+                const schedule = this.createWeeklySchedule(allocations, days);
+                
+                return {
+                    allocations,
+                    schedule,
+                    stats: {
+                        totalHours: Math.round(totalHours),
+                        days,
+                        subjects: allocations.length
+                    }
+                };
+            }
         }
     </script>
 </body>
