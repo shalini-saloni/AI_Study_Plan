@@ -509,6 +509,34 @@
                 
                 return { totalHours, days, weeks };
             }
+
+            calculateSubjectAllocation() {
+                const subjects = this.data.subjects;
+                const totalCredits = subjects.reduce((sum, s) => sum + s.credits, 0);
+                
+                return subjects.map(subject => {
+                    // Credit weight: Higher credits = more time
+                    const creditWeight = subject.credits / totalCredits;
+                    
+                    // Confidence weight: LOWER confidence = MORE time (inverted)
+                    // Confidence 1 → weight 1.0 (max), Confidence 5 → weight 0.2 (min)
+                    const confidenceWeight = (6 - subject.confidence) / 5;
+                    
+                    // Difficulty weight: More weak areas = more time
+                    const weakAreaCount = subject.weakAreas ? subject.weakAreas.length : 0;
+                    const difficultyWeight = 1 + (weakAreaCount * 0.15);
+                    
+                    // Combined weight formula:
+                    // 30% from credits, 50% from confidence (inverted), 20% from difficulty
+                    const weight = (creditWeight * 0.3) + (confidenceWeight * 0.5) + ((difficultyWeight - 1) * 0.2);
+                    
+                    return {
+                        ...subject,
+                        weight,
+                        percentage: 0
+                    };
+                });
+            }
         }
     </script>
 </body>
