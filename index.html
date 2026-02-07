@@ -472,6 +472,44 @@
     </style>
 </head>
 <body>
-    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        class StudyPlannerEngine {
+            constructor(studentData) {
+                this.data = studentData;
+                this.schedule = [];
+            }
+
+            calculateTotalHours() {
+                const targetDate = new Date(this.data.targetDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                targetDate.setHours(0, 0, 0, 0);
+                
+                const days = Math.max(1, Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)));
+                
+                const weeks = Math.floor(days / 7);
+                const remainingDays = days % 7;
+                
+                const weekdayHours = parseInt(this.data.weekdayHours) || 3;
+                const weekendHours = parseInt(this.data.weekendHours) || 6;
+                
+                // Calculate total hours more accurately
+                let totalHours = 0;
+                for (let i = 0; i < days; i++) {
+                    const checkDate = new Date(today);
+                    checkDate.setDate(today.getDate() + i);
+                    const dayOfWeek = checkDate.getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    totalHours += isWeekend ? weekendHours : weekdayHours;
+                }
+                
+                return { totalHours, days, weeks };
+            }
+        }
+    </script>
 </body>
 </html>
