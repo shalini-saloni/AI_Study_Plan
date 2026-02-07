@@ -922,6 +922,17 @@
                     }
                 }, 1500);
             };
+
+            if (loading) {
+                return (
+                    <div className="app-container">
+                        <div className="loading">
+                            <div className="spinner"></div>
+                            <div>Generating your personalized study plan...</div>
+                        </div>
+                    </div>
+                );
+            }
         }
     </script>
 </body>
